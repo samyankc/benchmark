@@ -1,9 +1,8 @@
 # benchmark
 
 Usage Example
-
+````C++
 #include <benchmark.h>
-
 #include <iostream>
 #include <vector>
 
@@ -30,7 +29,21 @@ int main()
         for( int i{ 0 }; i < 2000; ++i ) v.push_back( BigS{} );
     }
     
-
     cout << "\n\nResult 1" << Result1  //
          << "\n\nResult 2" << Result2;
 }
+````
+
+Possible Output
+````
+Result 1
+    Latency : 12844043 Cycles
+ Throughput : 77 / Giga Cycles
+
+
+Result 2
+    Latency : 5961193 Cycles
+ Throughput : 167 / Giga Cycles
+
+[ End of Program ]
+````
