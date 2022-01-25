@@ -13,37 +13,29 @@ int data[999];
 
 int main()
 {
-    using std::cout, std::vector;
-    BenchmarkResult Result1, Result2;
+    using std::vector;
 
-    for( auto _ : Benchmark >> Result1 )
+    for( auto _ : Benchmark("W/O Reserve") )
     {
         auto v = vector<BigS>{};
-        for( int i{ 0 }; i < 2000; ++i ) v.push_back( BigS{} );
+        for( int i{ 0 }; i < 200; ++i ) v.push_back( BigS{} );
     }
     
-    for( auto _ : Benchmark >> Result2 )
+    for( auto _ : Benchmark("W/  Reserve") )
     {
         auto v = vector<BigS>{};
-        v.reserve(2000);
-        for( int i{ 0 }; i < 2000; ++i ) v.push_back( BigS{} );
+        v.reserve(200);
+        for( int i{ 0 }; i < 200; ++i ) v.push_back( BigS{} );
     }
-    
-    cout << "\n\nResult 1" << Result1  //
-         << "\n\nResult 2" << Result2;
+
 }
 ````
 
 Possible Output
 ````
-Result 1
-    Latency : 12844043 Cycles
- Throughput : 77 / Giga Cycles
-
-
-Result 2
-    Latency : 5961193 Cycles
- Throughput : 167 / Giga Cycles
+                Latency         Throughput
+W/O Reserve     327777          3050
+W/  Reserve     93533           10691
 
 [ End of Program ]
 ````
