@@ -33,9 +33,13 @@ int main()
 
 Possible Output
 ````
-                Latency         Throughput
-W/O Reserve     327777          3050
-W/  Reserve     93533           10691
+
+Benchmark Summary
+                        Latency          Throughput
+---------------------------------------------------
+W/O Reserve              317235                3152
+W/  Reserve               91795               10893
+---------------------------------------------------
 
 [ End of Program ]
 ````
