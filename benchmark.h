@@ -1,6 +1,5 @@
 // usage:
-// for( auto _ : Benchmark ) ...
-// for( auto _ : Benchmark >> External_Result_Holder ) ...
+// for( auto _ : Benchmark("Title") ) ...
 
 #ifndef BENCHMARK_H
 #define BENCHMARK_H
@@ -8,6 +7,7 @@
 #include <immintrin.h>  //__rdtsc
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -19,37 +19,40 @@ struct BenchmarkResult
     std::string Title;
     std::size_t TotalCycle;
     std::size_t TotalIteration;
-
-    friend auto& operator<<( auto& out, const BenchmarkResult& Result )
-    {
-        auto Latency    = Result.TotalCycle / Result.TotalIteration;
-        auto Throughput = 1000000000 * Result.TotalIteration / Result.TotalCycle;
-        return out << "\n    Latency : " << Latency << " Cycles"            //
-                   << "\n Throughput : " << Throughput << " / Giga Cycles"  //
-                   << std::endl;
-    }
 };
 
-static auto BenchmarkResults = std::vector<BenchmarkResult>{};
-
-struct BenchmarkAnalyzerType
+struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
 {
-    BenchmarkAnalyzer() { BenchmarkResults.reserve( 10 ); }
-    ~BenchmarkAnalyzerType()
+    BenchmarkAnalyzer() : std::vector<BenchmarkResult>{} { reserve( 10 ); }
+
+    ~BenchmarkAnalyzer()
     {
-        std::cout << "\t\tLatency\t\tThroughput\n";
-        for( auto&& Result : BenchmarkResults )
+        auto DigitWidth = 20;
+        auto TitleWidth = std::max_element( begin(), end(),
+                                            []( auto& lhs, auto& rhs ) {
+                                                return lhs.Title.length() < rhs.Title.length();
+                                            } )
+                          ->Title.length();
+        using std::cout, std::setw, std::setfill;
+
+        cout << "\n\nBenchmark Summary\n"        //
+             << setw( TitleWidth ) << " "        //
+             << setw( DigitWidth ) << "Latency"  //
+             << setw( DigitWidth ) << "Throughput" << '\n';
+        cout << setw( TitleWidth + 2 * DigitWidth + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
+        for( auto&& Result : *this )
         {
             auto Latency    = Result.TotalCycle / Result.TotalIteration;
             auto Throughput = 1000000000 * Result.TotalIteration / Result.TotalCycle;
-            std::cout << Result.Title << "\t"  //
-                      << Latency << "\t\t"     //
-                      << Throughput << "\n";
+            cout << setw( TitleWidth ) << Result.Title  //
+                 << setw( DigitWidth ) << Latency       //
+                 << setw( DigitWidth ) << Throughput << '\n';
         }
+        cout << setw( TitleWidth + 2 * DigitWidth + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
     }
 };
 
-static auto BenchmarkAnalyzer = BenchmarkAnalyzerType{};
+static auto BenchmarkResults = BenchmarkAnalyzer{};
 
 struct BenchmarkContainer
 {
@@ -92,11 +95,6 @@ struct BenchmarkContainer
 
     auto begin() { return Iterator{ *this }; }
     auto end() { return Sentinel{}; }
-
-    auto operator>>( BenchmarkResult& RedirectedResult )
-    {
-        return std::decay_t<decltype( *this )>{ RedirectedResult };
-    }
 };
 
 auto Benchmark( std::string&& BenchmarkTitle )
