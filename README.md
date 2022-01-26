@@ -8,32 +8,28 @@ Usage Example
 
 struct BigS
 {
-int data[999];
+    int data[ 999 ];
 };
 
 int main()
 {
-    using std::vector;
-
-    for( auto _ : Benchmark("W/O Reserve") )
+    for( auto _ : Benchmark( "W/O Reserve" ) )
     {
-        auto v = vector<BigS>{};
-        for( int i{ 0 }; i < 200; ++i ) v.push_back( BigS{} );
-    }
-    
-    for( auto _ : Benchmark("W/  Reserve") )
-    {
-        auto v = vector<BigS>{};
-        v.reserve(200);
+        auto v = std::vector<BigS>{};
         for( int i{ 0 }; i < 200; ++i ) v.push_back( BigS{} );
     }
 
+    for( auto _ : Benchmark( "W/  Reserve" ) )
+    {
+        auto v = std::vector<BigS>{};
+        v.reserve( 200 );
+        for( int i{ 0 }; i < 200; ++i ) v.push_back( BigS{} );
+    }
 }
 ````
 
 Possible Output
 ````
-
 Benchmark Summary
                         Latency          Throughput
 ---------------------------------------------------
