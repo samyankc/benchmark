@@ -20,6 +20,7 @@ struct BenchmarkResult
     std::string Title;
     std::size_t TotalCycle;
     std::size_t TotalIteration;
+    auto operator<( const auto& RHS ) const { return Title.length() < RHS.Title.length(); }
 };
 
 struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
@@ -29,26 +30,26 @@ struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
     ~BenchmarkAnalyzer()
     {
         auto DigitWidth = 20;
-        auto TitleWidth = std::max_element( begin(), end(),
-                                            []( auto& lhs, auto& rhs ) {
-                                                return lhs.Title.length() < rhs.Title.length();
-                                            } )
-                          ->Title.length();
-        using std::cout, std::setw, std::setfill;
+        auto TitleWidth = std::max_element( begin(), end() )->Title.length();
 
-        cout << "\n\nBenchmark Summary\n"  //
-             << setw( TitleWidth + DigitWidth ) << "Latency" << setw( DigitWidth ) << "Throughput"
-             << '\n';
-        cout << setw( TitleWidth + DigitWidth * 2 + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
+        auto cout_row = [ = ]( const auto& Title, const auto Latency, const auto Throughput,
+                               const char fill = ' ' ) {
+            std::cout << std::setfill( fill ) << std::left               //
+                      << std::setw( TitleWidth ) << Title << std::right  //
+                      << std::setw( DigitWidth ) << Latency              //
+                      << std::setw( DigitWidth ) << Throughput           //
+                      << std::setfill( ' ' ) << '\n';
+        };
+
+        std::cout << "\n\nBenchmark Summary\n";  //
+        cout_row( "", "Latency", "Throughput" );
+        cout_row( "", "", "", '-' );
         for( auto&& Result : *this )
-        {
-            auto Latency    = Result.TotalCycle / Result.TotalIteration;
-            auto Throughput = 1000000000 * Result.TotalIteration / Result.TotalCycle;
-            cout << std::left << setw( TitleWidth ) << Result.Title  //
-                 << std::right << setw( DigitWidth ) << Latency << setw( DigitWidth ) << Throughput
-                 << '\n';
-        }
-        cout << setw( TitleWidth + DigitWidth * 2 + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
+            cout_row( Result.Title,                                           // Title
+                      Result.TotalCycle / Result.TotalIteration,              // Latency
+                      1000000000 * Result.TotalIteration / Result.TotalCycle  // Throughput
+            );
+        cout_row( "", "", "", '-' );
     }
 };
 
@@ -99,6 +100,7 @@ struct BenchmarkContainer
 
 auto Benchmark( std::string&& BenchmarkTitle )
 {
+    std::cout << "Benchmarking... " << BenchmarkTitle << "\n";
     BenchmarkResults.emplace_back( std::move( BenchmarkTitle ), 0, 0 );
     return BenchmarkContainer{ BenchmarkResults.back() };
 }
