@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -35,20 +36,19 @@ struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
                           ->Title.length();
         using std::cout, std::setw, std::setfill;
 
-        cout << "\n\nBenchmark Summary\n"        //
-             << setw( TitleWidth ) << " "        //
-             << setw( DigitWidth ) << "Latency"  //
-             << setw( DigitWidth ) << "Throughput" << '\n';
-        cout << setw( TitleWidth + 2 * DigitWidth + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
+        cout << "\n\nBenchmark Summary\n"  //
+             << setw( TitleWidth + DigitWidth ) << "Latency" << setw( DigitWidth ) << "Throughput"
+             << '\n';
+        cout << setw( TitleWidth + DigitWidth * 2 + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
         for( auto&& Result : *this )
         {
             auto Latency    = Result.TotalCycle / Result.TotalIteration;
             auto Throughput = 1000000000 * Result.TotalIteration / Result.TotalCycle;
-            cout << setw( TitleWidth ) << Result.Title  //
-                 << setw( DigitWidth ) << Latency       //
-                 << setw( DigitWidth ) << Throughput << '\n';
+            cout << std::left << setw( TitleWidth ) << Result.Title  //
+                 << std::right << setw( DigitWidth ) << Latency << setw( DigitWidth ) << Throughput
+                 << '\n';
         }
-        cout << setw( TitleWidth + 2 * DigitWidth + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
+        cout << setw( TitleWidth + DigitWidth * 2 + 1 ) << setfill( '-' ) << '\n' << setfill( ' ' );
     }
 };
 
