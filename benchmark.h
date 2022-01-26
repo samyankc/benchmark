@@ -11,6 +11,7 @@
 #include <ios>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -29,27 +30,33 @@ struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
 
     ~BenchmarkAnalyzer()
     {
-        auto DigitWidth = 20;
-        auto TitleWidth = std::max_element( begin(), end() )->Title.length();
+        const auto DigitWidth = 20;
+        const auto TitleWidth = std::max( std::max_element( begin(), end() )->Title.length(),  //
+                                          23ull );
 
-        auto cout_row = [ = ]( const auto& Title, const auto Latency, const auto Throughput,
-                               const char fill = ' ' ) {
-            std::cout << std::setfill( fill ) << std::left               //
-                      << std::setw( TitleWidth ) << Title << std::right  //
-                      << std::setw( DigitWidth ) << Latency              //
-                      << std::setw( DigitWidth ) << Throughput           //
+        auto cout_row = [ TW = std::setw( TitleWidth ), DW = std::setw( DigitWidth ) ](
+                        std::string_view Title, const auto Latency, const auto Throughput,
+                        const char fill = ' ' ) {
+            std::cout << std::setfill( fill ) << std::left << TW << Title  //
+                      << std::right << DW << Latency << DW << Throughput   //
                       << std::setfill( ' ' ) << '\n';
         };
 
-        std::cout << "\n\nBenchmark Summary\n";  //
-        cout_row( "", "Latency", "Throughput" );
-        cout_row( "", "", "", '-' );
+        auto cout_line = [ cout_row ] {
+            cout_row( "", "", "", '_' );
+            std::cout << '\n';
+        };
+
+        std::cout << "\n    ______________________"
+                     "\n   /                     /"
+                     "\n  /  Benchmark Summary  /\n";
+        /**/ cout_row( " /_____________________/", "Latency", "Throughput" );
+        cout_line();
         for( auto&& Result : *this )
-            cout_row( Result.Title,                                           // Title
-                      Result.TotalCycle / Result.TotalIteration,              // Latency
-                      1000000000 * Result.TotalIteration / Result.TotalCycle  // Throughput
-            );
-        cout_row( "", "", "", '-' );
+            cout_row( Result.Title,                                              // Title
+                      Result.TotalCycle / Result.TotalIteration,                 // Latency
+                      1000000000 * Result.TotalIteration / Result.TotalCycle );  // Throughput
+        cout_line();
     }
 };
 
