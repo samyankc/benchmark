@@ -21,41 +21,54 @@ struct BenchmarkResult
     std::string Title;
     std::size_t TotalCycle;
     std::size_t TotalIteration;
+    auto Latency() const { return TotalCycle / TotalIteration; }
+    auto Throughput() const { return 1000000000 * TotalIteration / TotalCycle; }
     auto operator<( const auto& RHS ) const { return Title.length() < RHS.Title.length(); }
 };
 
 struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
 {
-    BenchmarkAnalyzer() : std::vector<BenchmarkResult>{} { reserve( 10 ); }
+    std::size_t BaselinePos;
+    BenchmarkAnalyzer() : std::vector<BenchmarkResult>{}, BaselinePos{ 0 } { reserve( 10 ); }
 
     ~BenchmarkAnalyzer()
     {
         const auto DigitWidth = 20;
         const auto TitleWidth = std::max( std::max_element( begin(), end() )->Title.length(),  //
-                                          23ull );
+                                          24ull );
+        const auto ThroughputBaseline =
+        static_cast<double>( ( *this )[ BaselinePos ].Throughput() );
 
-        auto cout_row = [ TW = std::setw( TitleWidth ), DW = std::setw( DigitWidth ) ](
-                        std::string_view Title, const auto Latency, const auto Throughput,
-                        const char fill = ' ' ) {
-            std::cout << std::setfill( fill ) << std::left << TW << Title  //
-                      << std::right << DW << Latency << DW << Throughput   //
+        auto cout_row = [ TW = std::setw( TitleWidth ), DW = std::setw( DigitWidth ) ](  //
+                        std::string_view Title,                                          //
+                        const auto Latency,                                              //
+                        const auto Throughput,                                           //
+                        const auto Relative,                                             //
+                        const char fill = ' ' )                                          //
+        {
+            std::cout << std::setfill( fill ) << std::left                       //
+                      << TW << Title << std::right                               //
+                      << DW << Latency                                           //
+                      << DW << Throughput                                        //
+                      << DW << std::setprecision( 2 ) << std::fixed << Relative  //
                       << std::setfill( ' ' ) << '\n';
         };
 
         auto cout_line = [ cout_row ] {
-            cout_row( "", "", "", '_' );
+            cout_row( "", "", "", "", '_' );
             std::cout << '\n';
         };
 
         std::cout << "\n    ______________________"
                      "\n   /                     /"
                      "\n  /  Benchmark Summary  /\n";
-        /**/ cout_row( " /_____________________/", "Latency", "Throughput" );
+        /**/ cout_row( " /_____________________/", "Latency", "Throughput", "Relative" );
         cout_line();
         for( auto&& Result : *this )
-            cout_row( Result.Title,                                              // Title
-                      Result.TotalCycle / Result.TotalIteration,                 // Latency
-                      1000000000 * Result.TotalIteration / Result.TotalCycle );  // Throughput
+            cout_row( Result.Title,         //
+                      Result.Latency(),     //
+                      Result.Throughput(),  //
+                      Result.Throughput() / ThroughputBaseline );
         cout_line();
     }
 };
@@ -68,7 +81,7 @@ struct BenchmarkContainer
     using time_point = std::chrono::time_point<clock>;
 
     constexpr static auto MaxDuration  = std::chrono::milliseconds{ 2000 };
-    constexpr static auto MaxIteration = std::size_t{ 50000 };
+    constexpr static auto MaxIteration = std::size_t{ 9876 };
 
     BenchmarkResult& Result;
 
@@ -108,10 +121,34 @@ struct BenchmarkContainer
 auto Benchmark( std::string&& BenchmarkTitle )
 {
     std::cout << "Benchmarking... " << BenchmarkTitle << "\n";
-    BenchmarkResults.emplace_back( std::move( BenchmarkTitle ), 0, 0 );
+    BenchmarkResults.push_back( { " " + BenchmarkTitle, 0, 0 } );
     return BenchmarkContainer{ BenchmarkResults.back() };
 }
 
 };  // namespace
 
 #endif /* BENCHMARK_H */
+
+#define RUN_TEST
+#ifdef RUN_TEST
+
+int main()
+{
+    std::ios::sync_with_stdio( false );
+    for( auto _ : Benchmark( "puts" ) )
+    {  //
+        puts( "This is a test string." );
+    }
+
+    for( auto _ : Benchmark( "std::cout" ) )
+    {  //
+        std::cout << "This is a test string." << std::endl;
+    }
+
+    for( auto _ : Benchmark( "no-op" ) )
+    {
+        for( volatile int i = 0; i < 2000; ++i ) { ++i; }
+    }
+}
+
+#endif

@@ -14,7 +14,7 @@ extern "C"
 #endif
 
 #define MaxIteration 7890
-#define MaxCycle     ( 2 * CLOCKS_PER_SEC )
+#define MaxCycle     ( 1 * CLOCKS_PER_SEC )
 
 #define Finally( fn )    __attribute__( ( cleanup( fn ) ) )
 #define AutoRelease( T ) Finally( T##_IndirectRelease ) T
@@ -162,7 +162,7 @@ extern "C"
     {
         putchar( '\n' );
         print( " " );
-        print( BRNode->Title, self->TitleWidth-1, true );
+        print( BRNode->Title, self->TitleWidth - 1, true );
         print_num( BRN_Latency( BRNode ), self->LatencyWidth );
         print_num( BRN_Throughput( BRNode ), self->ThroughputWidth );
     }
@@ -203,7 +203,7 @@ extern "C"
     ////////////////////////////// BenchmarkModulator [Methods] //////////////////////////////
     LP_BM BM_New( const char* Title = "Unspecified" )
     {
-        print( "Benchmarking... " );
+        print( "\nBenchmarking... " );
         print( Title );
         putchar( '\n' );
         LP_BM self = (LP_BM)malloc( sizeof( BenchmarkModulator ) );
@@ -242,22 +242,27 @@ extern "C"
 
 #endif /* BENCHMARK_H */
 
-#define RUN_TEST_
+#define RUN_TEST
 #ifdef RUN_TEST
 
 int main()
 {
     EnableBenchmark();
-    
-    Benchmark( "puts" ) { puts( "This is a test string." ); }
 
-    Benchmark( "print" ) { print( "This is a test string.\n" ); }
+    Benchmark( "puts" )
+    {  //
+        puts( "This is a test string." );
+    }
+
+    Benchmark( "print" )
+    {  //
+        print( "This is a test string.\n" );
+    }
 
     Benchmark( "no-op" )
     {
         for( volatile int i = 0; i < 2000; ++i ) { ++i; }
     }
-
     return 0;
 }
 
