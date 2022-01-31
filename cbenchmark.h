@@ -38,18 +38,9 @@ extern "C"
     size_t digit_width( long long n )
     {
         if( n < 0 ) return 1 + digit_width( -n );
-        if( n < 10 ) return 1;
-        if( n < 100 ) return 2;
-        if( n < 1000 ) return 3;
-        if( n < 10000 ) return 4;
-        if( n < 100000 ) return 5;
-        if( n < 1000000 ) return 6;
-        if( n < 10000000 ) return 7;
-        if( n < 100000000 ) return 8;
-        if( n < 1000000000 ) return 9;
-        if( n < 10000000000 ) return 10;
-        if( n < 100000000000 ) return 11;
-        return 22;
+        for( int i = 1; i < 22; ++i )
+            if( ( n /= 10 ) == 0 ) return i;
+        return 0;
     }
 
     ////////////////////////////// BenchmarkResultNode [Class] //////////////////////////////
@@ -249,20 +240,17 @@ int main()
 {
     EnableBenchmark();
 
-    Benchmark( "puts" )
-    {  //
-        puts( "This is a test string." );
-    }
+    Benchmark( "puts" ) { puts( "test string" ); }
+    Benchmark( "printf" ) { printf( "%s%c", "test string", '\n' ); }
 
-    Benchmark( "print" )
-    {  //
-        print( "This is a test string.\n" );
-    }
+    Benchmark( "putchar" ) { putchar( 'a' ); }
+    Benchmark( "_putchar_nolock" ) { _putchar_nolock( 'a' ); }
 
-    Benchmark( "no-op" )
+    Benchmark( "volatile increment" )
     {
-        for( volatile int i = 0; i < 2000; ++i ) { ++i; }
+        for( volatile int i = 0; i < 100; ++i ) {}
     }
+
     return 0;
 }
 

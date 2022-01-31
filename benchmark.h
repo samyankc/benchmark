@@ -33,7 +33,7 @@ struct BenchmarkAnalyzer : std::vector<BenchmarkResult>
 
     ~BenchmarkAnalyzer()
     {
-        const auto DigitWidth = 20;
+        const auto DigitWidth = 18;
         const auto TitleWidth = std::max( std::max_element( begin(), end() )->Title.length(),  //
                                           24ull );
         const auto ThroughputBaseline =
@@ -81,7 +81,7 @@ struct BenchmarkContainer
     using time_point = std::chrono::time_point<clock>;
 
     constexpr static auto MaxDuration  = std::chrono::milliseconds{ 2000 };
-    constexpr static auto MaxIteration = std::size_t{ 9876 };
+    constexpr static auto MaxIteration = std::size_t{ 12345 };
 
     BenchmarkResult& Result;
 
@@ -132,23 +132,35 @@ auto Benchmark( std::string&& BenchmarkTitle )
 #define RUN_TEST
 #ifdef RUN_TEST
 
+#include <vector>
+
+struct BigS
+{
+    int data[ 999 ];
+};
+
 int main()
 {
-    std::ios::sync_with_stdio( false );
-    for( auto _ : Benchmark( "puts" ) )
-    {  //
-        puts( "This is a test string." );
-    }
-
-    for( auto _ : Benchmark( "std::cout" ) )
-    {  //
-        std::cout << "This is a test string." << std::endl;
-    }
-
-    for( auto _ : Benchmark( "no-op" ) )
+    for( auto _ : Benchmark( "Without Reserve" ) )
     {
-        for( volatile int i = 0; i < 2000; ++i ) { ++i; }
+        auto v = std::vector<BigS>{};
+        for( int i{ 0 }; i < 20; ++i ) v.push_back( BigS{} );
     }
+
+    for( auto _ : Benchmark( "With Reserve" ) )
+    {
+        auto v = std::vector<BigS>{};
+        v.reserve( 20 );
+        for( int i{ 0 }; i < 20; ++i ) v.push_back( BigS{} );
+    }
+    for( auto _ : Benchmark( "volatile increment" ) )
+    {
+        for( volatile int i = 0; i < 100; ++i ) { ++i; }
+    }
+    for( auto _ : Benchmark( "Random Stuff" ) ) int a = 0;
+    for( auto _ : Benchmark( "What if I have an extremely long title ?" ) ) {}
+
+
 }
 
 #endif
