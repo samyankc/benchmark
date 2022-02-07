@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <windows.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +17,7 @@ extern "C" {
 #endif
 
 #define MaxIteration 5678
-#define MaxCycle     ( CLOCKS_PER_SEC * 3 )
+#define MaxCycle     ( CLOCKS_PER_SEC * 2 )
 
 size_t digit_width( long long n )
 {
@@ -78,7 +77,7 @@ static BenchmarkAnalyser BenchmarkResults = { NULL, NULL,
                                               strlen( "Latency" ), strlen( "Throughput" ) + 5 };
 
 ////////////////////////////// BenchmarkAnalyser [Methods] //////////////////////////////
-int BA_PushBack( LP_BA self, LP_BRN NewNode )
+void BA_PushBack( LP_BA self, LP_BRN NewNode )
 {
     if( self->ListHead == NULL )  // new container
         self->ListTail = self->ListHead = NewNode;
@@ -94,8 +93,6 @@ int BA_PushBack( LP_BA self, LP_BRN NewNode )
     UpdateMaxValue( self->TitleWidth, strlen( NewNode->Title ) );
     UpdateMaxValue( self->LatencyWidth, digit_width( BRN_Latency( NewNode ) ) );
     UpdateMaxValue( self->ThroughputWidth, digit_width( BRN_Throughput( NewNode ) ) );
-
-    return 0;
 }
 
 void BA_PrintHorizontalLine( LP_BA self )
@@ -121,8 +118,8 @@ void BA_PrintSummaryHeader( LP_BA self )
 void BA_PrintSummaryLine( LP_BA self, LP_BRN BRNode )
 {
     printf( "\n %-*s", (int)self->TitleWidth, BRNode->Title );
-    printf( "%*lu", (int)self->LatencyWidth, BRN_Latency( BRNode ) );
-    printf( "%*lu", (int)self->ThroughputWidth, BRN_Throughput( BRNode ) );
+    printf( "%*d", (int)self->LatencyWidth, (int)BRN_Latency( BRNode ) );
+    printf( "%*d", (int)self->ThroughputWidth, (int)BRN_Throughput( BRNode ) );
 }
 
 void BA_Release( LP_BA self )
@@ -160,15 +157,16 @@ typedef struct BenchmarkModulatorTag
 #define UniqueVarID( Name, ID )  UniqueVarID_( Name, ID )
 #define UniqueName               UniqueVarID( _0_, __LINE__ )
 
-#define Benchmark( Title )                                                    \
-    ; /*single line control block skip*/                                      \
-    printf( "\nBenchmarking... %s\n", Title );                                \
-    AutoRelease( BenchmarkAnalyser )* UniqueName =                            \
-    BenchmarkResults.ListHead ? NULL : &BenchmarkResults;                     \
-    for( BenchmarkModulator Mod = { clock(), 0, 0 };                          \
-         Mod.TotalCycle < MaxCycle && Mod.TotalIteration < MaxIteration ||    \
-         BA_PushBack( &BenchmarkResults,                                      \
-                      BRN_New( Title, Mod.TotalCycle, Mod.TotalIteration ) ); \
+#define Benchmark( Title )                                                      \
+    ; /*single line control block skip*/                                        \
+    printf( "\nBenchmarking... %s\n", Title );                                  \
+    AutoRelease( BenchmarkAnalyser )* UniqueName =                              \
+    BenchmarkResults.ListHead ? NULL : &BenchmarkResults;                       \
+    for( BenchmarkModulator Mod = { clock(), 0, 0 };                            \
+         ( Mod.TotalCycle < MaxCycle && Mod.TotalIteration < MaxIteration ) ||  \
+         ( BA_PushBack( &BenchmarkResults,                                      \
+                        BRN_New( Title, Mod.TotalCycle, Mod.TotalIteration ) ), \
+           0 );                                                                 \
          Mod.TotalCycle = clock() - Mod.StartTime, ++Mod.TotalIteration )
 
 #ifdef __cplusplus
@@ -180,11 +178,14 @@ typedef struct BenchmarkModulatorTag
 #define DONT_RUN_TEST_
 #ifndef DONT_RUN_TEST
 
+#include <math.h>
 void task( int k )
 {
-    printf( "Performing task." );
-    for( int i = 0, interval = 10; i * interval < k; ++i, Sleep( interval ) ) putchar( '.' );
-    printf( "Complete\n" );
+    printf( "Performing task . " );
+    volatile double m;
+    for( int i = 0; i < k; ++i )
+        for( int j = 0; j < k; ++j ) m = sqrt( pow( cos( i ), sin( j ) ) );
+    printf( "Complete.\n" );
 }
 
 int main()

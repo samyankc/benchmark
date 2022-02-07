@@ -100,8 +100,8 @@ struct BenchmarkContainer
         auto operator++() { --RemainIteration; }
         auto operator!=( Sentinel ) { return RemainIteration > 0 && clock::now() < EndTime; }
 
-        Iterator( BaseRange& Base )
-            : Base{ Base },                                      //
+        Iterator( BaseRange& Base_ )
+            : Base{ Base_ },                                      //
               EndTime{ clock::now() + BaseRange::MaxDuration },  //
               RemainIteration{ BaseRange::MaxIteration },        //
               StartCycle{ __rdtsc() }
@@ -129,8 +129,8 @@ auto Benchmark( std::string&& BenchmarkTitle )
 
 #endif /* BENCHMARK_H */
 
-#define RUN_TEST
-#ifdef RUN_TEST
+
+#ifndef DONT_RUN_TEST
 
 #include <vector>
 
@@ -155,11 +155,10 @@ int main()
     }
     for( auto _ : Benchmark( "volatile increment" ) )
     {
-        for( volatile int i = 0; i < 100; ++i ) { ++i; }
+        for( volatile int i = 0; i < 100; ++i ) { }
     }
-    for( auto _ : Benchmark( "Random Stuff" ) ) int a = 0;
+    for( auto _ : Benchmark( "Random Stuff" ) ) [[maybe_unused]] int a = 0;
     for( auto _ : Benchmark( "What if I have an extremely long title ?" ) ) {}
-
 
 }
 
